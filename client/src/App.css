@@ -1,5 +1,6 @@
 .App {
   text-align: center;
+  box-sizing: border-box;
 }
 
 .App-logo {
@@ -42,10 +43,16 @@ body {
   padding: 16px;
 }
 
-#chat {
+div{
+  box-sizing: border-box;
+}
+
+#chat, #queue {
   max-height: calc(100vh - 128px);
   overflow: scroll;
   padding: 16px;
+  width: 50%;
+  float: left;
 }
 
 .name {
@@ -54,4 +61,15 @@ body {
 
 .content {
   margin-bottom: 8px;
+}
+
+.disabled{
+  pointer-events: none;
+}
+
+.player{
+  margin: auto;
+  width: 640px;
+  margin-top: 50px;
+  text-align: center;
 }

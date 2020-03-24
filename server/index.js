@@ -8,6 +8,7 @@ const uri = process.env.MONGODB_URI;
 const port = process.env.PORT || 5000;
 
 const Message = require('./Message');
+const Song = require('./Song');
 const mongoose = require('mongoose');
 
 mongoose.connect(uri, {
@@ -19,12 +20,14 @@ app.use(express.static(path.join(__dirname, '..', 'client', 'build')));
 
 io.on('connection', (socket) => {
 
-  // Get the last 10 messages from the database.
-  Message.find().sort({createdAt: -1}).limit(10).exec((err, messages) => {
+  // Get the last messages from the database.
+  Message.find().sort({createdAt: -1}).exec((err, messages) => {
     if (err) return console.error(err);
-
-    // Send the last messages to the user.
-    socket.emit('init', messages);
+    Song.find().sort({position: 1}).exec((err, songs) => {
+      if (err) return console.error(err);
+      // Send the messages and songs to the user.
+      socket.emit('init', {"messages": messages, "songs": songs});
+    });
   });
 
   // Listen to connected users for a new message.
@@ -41,8 +44,56 @@ io.on('connection', (socket) => {
     });
 
     // Notify all other users about a new message.
-    socket.broadcast.emit('push', msg);
+    socket.broadcast.emit('pushMessage', msg);
   });
+
+  socket.on('deleteMessage', (msg) => {
+    // Delete a message with the content and the name of the user.
+    Message.deleteOne(msg,function (err){
+      if (err) return console.error(err);
+    });
+
+    // Notify all other users about a deleted message and send messages left.
+    Message.find().sort({createdAt: -1}).exec((err, messages) => {
+      if (err) return console.error(err);
+
+      // Send the last messages to the user.
+      socket.broadcast.emit('destroyMessage', messages);
+    });
+  });
+
+  socket.on('song', (sg) => {
+    // Create a message with the content and the name of the user.
+    const song = new Song({
+      url: sg.url,
+      position: sg.position,
+    });
+
+    // Save the song to the database.
+    song.save((err) => {
+      if (err) return console.error(err);
+    });
+
+    // Notify all other users about a new message.
+    socket.broadcast.emit('pushSong', song);
+
+  });
+
+  socket.on('deleteSong', (song) => {
+    // Delete a message with the content and the name of the user.
+    Song.deleteOne(song,function (err){
+      if (err) return console.error(err);
+    });
+
+    // Notify all other users about a deleted message and send messages left.
+    Song.find().sort({position: 1}).exec((err, songs) => {
+      if (err) return console.error(err);
+
+      // Send the last messages to the user.
+      socket.broadcast.emit('destroySong', songs);
+    });
+  });
+
 });
 
 http.listen(port, () => {

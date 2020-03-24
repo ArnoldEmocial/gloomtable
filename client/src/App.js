@@ -6,6 +6,8 @@ import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 
 import BottomBar from './BottomBar';
+import ReactPlayer from 'react-player';
+import Player from './Player';
 import './App.css';
 
 class App extends React.Component {
@@ -16,25 +18,58 @@ class App extends React.Component {
       chat: [],
       content: '',
       name: '',
+      songs: []
     };
   }
 
   componentDidMount() {
     this.socket = io(config[process.env.NODE_ENV].endpoint);
 
-    // Load the last 10 messages in the window.
-    this.socket.on('init', (msg) => {
+    // Load the last messages in the window.
+    this.socket.on('init', (data) => {
       this.setState((state) => ({
-        chat: [...state.chat, ...msg.reverse()],
+        chat: [...state.chat, ...data.messages.reverse()],
+        songs: [...state.songs, ...data.songs]
       }), this.scrollToBottom);
+
     });
 
     // Update the chat if a new message is broadcasted.
-    this.socket.on('push', (msg) => {
+    this.socket.on('pushMessage', (msg) => {
       this.setState((state) => ({
         chat: [...state.chat, msg],
       }), this.scrollToBottom);
     });
+
+    // Update the queue if a new song is broadcasted.
+    this.socket.on('pushSong', (sg) => {
+      this.setState((state) => ({
+        songs: [...state.songs, sg],
+      }), this.scrollToBottom);
+    });
+
+  }
+
+  removeFromChat(event){
+    console.log(event);
+
+    // Prevent the form to reload the current page.
+    event.preventDefault();
+
+    this.setState((state) => {
+      console.log(state);
+      console.log('this', this.socket);
+      // Ask server to delete first message
+      this.socket.emit('deleteMessage', {
+        name: state.chat[0].name,
+        content: state.chat[0].content,
+      });
+
+      // Update the chat and remove the deleted message.
+      return {
+        chat: state.chat.slice(1)
+      };
+    }, this.scrollToBottom);
   }
 
   // Save the message the user is typing in the input field.
@@ -58,9 +93,11 @@ class App extends React.Component {
     // Prevent the form to reload the current page.
     event.preventDefault();
 
+    ReactPlayer.canPlay(this.state.content) ? this.newSong() : this.newMessage()
+  }
+
+  newMessage(){
     this.setState((state) => {
-      console.log(state);
-      console.log('this', this.socket);
       // Send the new message to the server.
       this.socket.emit('message', {
         name: state.name,
@@ -72,6 +109,25 @@ class App extends React.Component {
         chat: [...state.chat, {
           name: state.name,
           content: state.content,
+        }],
+        content: '',
+      };
+    }, this.scrollToBottom);
+  }
+
+  newSong(){
+    this.setState((state) => {
+      // Send the new song to the server.
+      this.socket.emit('song', {
+        position: state.songs.length + 1,
+        url: state.content,
+      });
+
+      // Update the chat with the user's message and remove the current message.
+      return {
+        songs: [...state.songs, {
+          position: state.songs.length + 1,
+          url: state.content,
         }],
         content: '',
       };
@@ -101,6 +157,25 @@ class App extends React.Component {
             );
           })}
         </Paper>
+        <Paper id="queue" elevation={3}>
+          {this.state.songs.map((el, index) => {
+            return (
+              <div key={index}>
+                <Typography variant="caption" className="name">
+                  {el.position}
+                </Typography>
+                <Typography variant="body1" className="content">
+                  {el.url}
+                </Typography>
+              </div>
+            );
+          })}
+        </Paper>
+        {this.state.chat[1000] !== undefined ? 
+          <Player url={this.state.chat[0].content}/> :
+          ""
+        }
+
         <BottomBar
           content={this.state.content}
           handleContent={this.handleContent.bind(this)}
