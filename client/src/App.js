@@ -48,6 +48,12 @@ class App extends React.Component {
       }), this.scrollToBottom);
     });
 
+    this.socket.on('destroySong', (sg) => {
+      this.setState((state) => ({
+        songs: sg,
+      }), this.scrollToBottom);
+    });
+
   }
 
   removeFromChat(event){
@@ -140,6 +146,20 @@ class App extends React.Component {
     chat.scrollTop = chat.scrollHeight;
   }
 
+  playNextSong(){
+    this.setState((state) => {
+      // delete first song
+      this.socket.emit('deleteSong', {
+        position: state.songs[0].position,
+        url: state.songs[0].url,
+      });
+
+      return {
+        songs: state.songs.slice(1)
+      };
+    }, this.scrollToBottom);
+  }
+
   render() {
     return (
       <div className="App">
@@ -171,8 +191,8 @@ class App extends React.Component {
             );
           })}
         </Paper>
-        {this.state.chat[1000] !== undefined ? 
-          <Player url={this.state.chat[0].content}/> :
+        {this.state.songs[0] !== undefined ? 
+          <Player url={this.state.songs[0].url} playNextSong={this.playNextSong.bind(this)}/> :
           ""
         }
 

@@ -83,6 +83,9 @@ io.on('connection', (socket) => {
     // Delete a message with the content and the name of the user.
     Song.deleteOne(song,function (err){
       if (err) return console.error(err);
+      Song.where().updateMany({},{$inc : {position : -1}},function (er){
+        if (er) return console.error(er);
+      });
     });
 
     // Notify all other users about a deleted message and send messages left.

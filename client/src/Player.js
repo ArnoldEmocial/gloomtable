@@ -4,9 +4,8 @@ import ReactPlayer from 'react-player'
 export default function Player(props) {
 
     return (
-    	<div className="disabled player">
-    		Now Playing
-    		<ReactPlayer url={props.url} playing />
+    	<div className="player">
+    		<ReactPlayer url={props.url} onEnded={props.playNextSong} playing />
     	</div>
     )
 
