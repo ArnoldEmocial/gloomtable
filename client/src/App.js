@@ -92,6 +92,14 @@ class App extends React.Component {
     });
   }
 
+  handleNameSub(event) {
+    this.setState({
+      name: event.target.value,
+    });
+    document.getElementsByClassName('nameInput')[0].style.display = 'none';
+    document.getElementsByClassName('urlInput')[0].style.display = 'block';
+  }
+
   // When the user is posting a new message.
   handleSubmit(event) {
     console.log(event);
@@ -177,6 +185,10 @@ class App extends React.Component {
             );
           })}
         </Paper>
+        {this.state.songs[0] !== undefined ? 
+          <Player url={this.state.songs[0].url} playNextSong={this.playNextSong.bind(this)}/> :
+          ""
+        }
         <Paper id="queue" elevation={3}>
           {this.state.songs.map((el, index) => {
             return (
@@ -191,15 +203,11 @@ class App extends React.Component {
             );
           })}
         </Paper>
-        {this.state.songs[0] !== undefined ? 
-          <Player url={this.state.songs[0].url} playNextSong={this.playNextSong.bind(this)}/> :
-          ""
-        }
-
         <BottomBar
           content={this.state.content}
           handleContent={this.handleContent.bind(this)}
           handleName={this.handleName.bind(this)}
+          handleNameSub={this.handleNameSub.bind(this)}
           handleSubmit={this.handleSubmit.bind(this)}
           name={this.state.name}
         />
