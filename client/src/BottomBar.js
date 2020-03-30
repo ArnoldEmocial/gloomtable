@@ -64,7 +64,7 @@ export default function BottomBar(props) {
               onBlur={props.handleNameSub}
               onKeyDown={handleKeyPress}
               value={props.name}
-              placeholder="Name"
+              placeholder="What's your name?"
               classes={{
                 root: classes.inputRoot,
                 input: classes.inputInput,
@@ -82,7 +82,7 @@ export default function BottomBar(props) {
               <InputBase
                 onChange={props.handleContent}
                 value={props.content}
-                placeholder="Type your message..."
+                placeholder="Enter message or song URL"
                 classes={{
                   root: classes.inputRoot,
                   input: classes.inputInput,

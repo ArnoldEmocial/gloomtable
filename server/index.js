@@ -21,7 +21,7 @@ app.use(express.static(path.join(__dirname, '..', 'client', 'build')));
 io.on('connection', (socket) => {
 
   // Get the last messages from the database.
-  Message.find().sort({createdAt: -1}).exec((err, messages) => {
+  Message.find().sort({createdAt: -1}).limit(10).exec((err, messages) => {
     if (err) return console.error(err);
     Song.find().sort({position: 1}).exec((err, songs) => {
       if (err) return console.error(err);
@@ -64,10 +64,7 @@ io.on('connection', (socket) => {
 
   socket.on('song', (sg) => {
     // Create a message with the content and the name of the user.
-    const song = new Song({
-      url: sg.url,
-      position: sg.position,
-    });
+    const song = new Song(sg);
 
     // Save the song to the database.
     song.save((err) => {
@@ -83,17 +80,17 @@ io.on('connection', (socket) => {
     // Delete a message with the content and the name of the user.
     Song.deleteOne(song,function (err){
       if (err) return console.error(err);
+      
       Song.where().updateMany({},{$inc : {position : -1}},function (er){
         if (er) return console.error(er);
       });
-    });
+          // Notify all other users about a deleted message and send messages left.
+      Song.find().sort({position: 1}).exec((err, songs) => {
+        if (err) return console.error(err);
 
-    // Notify all other users about a deleted message and send messages left.
-    Song.find().sort({position: 1}).exec((err, songs) => {
-      if (err) return console.error(err);
-
-      // Send the last messages to the user.
-      socket.broadcast.emit('destroySong', songs);
+        // Send the last messages to the user.
+        socket.broadcast.emit('destroySong', songs);
+      });
     });
   });
 

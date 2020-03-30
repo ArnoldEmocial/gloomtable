@@ -4,6 +4,11 @@ import io from 'socket.io-client';
 
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
+import Divider from '@material-ui/core/Divider';
+import Chip from '@material-ui/core/Chip';
+import PlayCircleFilledIcon from '@material-ui/icons/PlayCircleFilled';
+import SkipNextRoundedIcon from '@material-ui/icons/SkipNextRounded';
+import Button from '@material-ui/core/Button';
 
 import BottomBar from './BottomBar';
 import ReactPlayer from 'react-player';
@@ -135,6 +140,7 @@ class App extends React.Component {
       this.socket.emit('song', {
         position: state.songs.length + 1,
         url: state.content,
+        name: state.name
       });
 
       // Update the chat with the user's message and remove the current message.
@@ -142,6 +148,7 @@ class App extends React.Component {
         songs: [...state.songs, {
           position: state.songs.length + 1,
           url: state.content,
+          name: state.name
         }],
         content: '',
       };
@@ -171,38 +178,50 @@ class App extends React.Component {
   render() {
     return (
       <div className="App">
-        <Paper id="chat" elevation={3}>
-          {this.state.chat.map((el, index) => {
-            return (
-              <div key={index}>
-                <Typography variant="caption" className="name">
-                  {el.name}
-                </Typography>
-                <Typography variant="body1" className="content">
-                  {el.content}
-                </Typography>
-              </div>
-            );
-          })}
-        </Paper>
+        <div className="wrapper">
+          <div className="blank"><Chip label="Chat" /></div>
+          <Paper id="chat" elevation={3}>
+            {this.state.chat.map((el, index) => {
+              return (
+                <div key={index}>
+                  <Typography variant="caption" className="name">
+                    {el.name}
+                  </Typography>
+                  <Typography variant="body1" className="content">
+                    {el.content}
+                  </Typography>
+                </div>
+              );
+            })}
+          </Paper>
+        </div>
         {this.state.songs[0] !== undefined ? 
           <Player url={this.state.songs[0].url} playNextSong={this.playNextSong.bind(this)}/> :
           ""
         }
-        <Paper id="queue" elevation={3}>
-          {this.state.songs.map((el, index) => {
-            return (
-              <div key={index}>
-                <Typography variant="caption" className="name">
-                  {el.position}
-                </Typography>
-                <Typography variant="body1" className="content">
-                  {el.url}
-                </Typography>
-              </div>
-            );
-          })}
-        </Paper>
+        <div className="wrapper">
+          <div className="blank">
+            <Chip label="Queue" />
+            <Button variant="contained" color="primary" className="skip" onClick={this.playNextSong.bind(this)}>
+              <SkipNextRoundedIcon />
+            </Button>
+          </div>
+          <Paper id="queue" elevation={3}>
+            {this.state.songs.map((el, index) => {
+              return (
+                <div key={index}>
+                  <Typography variant="caption" className="name">
+                    {el.name}
+                  </Typography>
+                  <Typography variant="body1" className="content">
+                    {el.url}
+                  </Typography>
+                  <Divider light />
+                </div>
+              );
+            })}
+          </Paper>
+        </div>
         <BottomBar
           content={this.state.content}
           handleContent={this.handleContent.bind(this)}
